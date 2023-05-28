@@ -1,9 +1,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image.h"
-#include "stb_image_write.h"
+#include "stb/stb_image.h"
+#include "stb/stb_image_write.h"
 #include <math.h>
+
 
 extern void rotate(
         int width, int height, int channels, unsigned char* image, 
@@ -25,10 +26,8 @@ void rotate2(
             int ix = (int)new_x;
             int iy = (int)new_y;
 
-//            printf("%d %d new(old): %d %d %lf %lf\n", y, x, iy, ix, new_y, new_x);
 
             if (ix < 0 || ix >= width || iy < 0 || iy >= height) {
-                // handle out-of-bounds pixels
             }
             else {
                 unsigned char* pixel = image + (iy * width + ix) * channels;
@@ -45,36 +44,43 @@ void rotate2(
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
-    int width, height, channels;
-    unsigned char* image = stbi_load("butterfly.jpg", &width, &height, &channels, 0);
+    if (argc < 4) {
+        printf("Please, specify all the parameters: src, dst, angle\n");
+        return 1;
+    }
 
-    double radians = 3 * M_PI / 4; // 45 degrees in radians
+    int width, height, channels, new_width, new_height;
+    unsigned char* image = stbi_load(argv[1], &width, &height, &channels, 0);
+    if (image == NULL) {
+        printf("Cannot load specified file\n");
+        return 1;
+    }
 
-    int new_width = abs(width * cos(radians)) + abs(height * sin(radians));
-    int new_height = abs(width * sin(radians)) + abs(height * cos(radians));
+    double radians = atoi(argv[3]) * M_PI / 180;
 
     unsigned char* rotated_image = (unsigned char*)malloc(3LL * height * width * channels);
     if (rotated_image == NULL) {
-        printf("Malloc failed\n");
+        printf("Failed to allocate memory for rotated image\n");
+        stbi_image_free(image);
         return 1;
     }
 
     rotate(width, height, channels, image, radians, &new_width, &new_height, rotated_image);
-    printf("new_w = %d, new_h = %d\n", new_width, new_height);
-    int size = new_width * new_height * channels;
-    for (int i = 0; i < size; i++) {
-       // printf("%d\n", i);
-        unsigned char pxl = rotated_image[i];
-       // printf("%d'th: ", i);
-       // printf("%u\n", pxl);
-    }
+    stbi_image_free(image);
 
-    stbi_write_jpg("rotated.jpg", new_width, new_height, channels, rotated_image, 0);
+    int saved_status = stbi_write_jpg(argv[2], new_width, new_height, channels, rotated_image, 0);
+    free(rotated_image);
+
+    if (saved_status != 0) {
+        printf("Failed to save rotated image into specified file\n");
+        return 1;
+    }
 
     stbi_image_free(image);
     free(rotated_image);
 
     return 0;
 }
+

@@ -14,7 +14,7 @@ PREOBJ = $(OBJPATH)/crt1.o $(OBJPATH)/crti.o
 POSTOBJ = $(OBJPATH)/crtn.o
 
 SRCS = app.c rotate.s
-HEAD = stb_image_write.h stb_image.h
+HEAD = stb/stb_image_write.h stb/stb_image.h
 OBJS = app.o rotate.o
 
 EXE = app
